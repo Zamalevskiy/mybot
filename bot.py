@@ -1,5 +1,5 @@
 import asyncio
-from aiogram import Bot, Dispatcher, F, types
+from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.enums import ParseMode
@@ -14,6 +14,7 @@ from utils.config import TOKEN
 # Например: https://mybot-945b.onrender.com
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
+# === Инициализация бота и диспетчера ===
 bot = Bot(
     token=TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -25,11 +26,11 @@ dp = Dispatcher()
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
     builder = InlineKeyboardBuilder()
-    builder.button(text="️🌪 В жизни бардак, не знаю что делать", callback_data="chapter_03")
-    builder.button(text=" 🙂 Вроде есть всё, а радости нет", callback_data="chapter_04")
-    builder.button(text=" 💔 Пусто внутри. Одиночество и боль", callback_data="chapter_05")
-    builder.button(text=" 😔 Устала быть сильной, хочу покоя", callback_data="chapter_06")
-    builder.button(text=" 👤 Обо мне", callback_data="chapter_02")
+    builder.button(text="🌪 В жизни бардак, не знаю что делать", callback_data="chapter_03")
+    builder.button(text="🙂 Вроде есть всё, а радости нет", callback_data="chapter_04")
+    builder.button(text="💔 Пусто внутри. Одиночество и боль", callback_data="chapter_05")
+    builder.button(text="😔 Устала быть сильной, хочу покоя", callback_data="chapter_06")
+    builder.button(text="👤 Обо мне", callback_data="chapter_02")
     builder.adjust(1)
 
     text = (
@@ -75,27 +76,40 @@ async def handle_webhook(request):
 async def run_webserver():
     app = web.Application()
     app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)  # Telegram шлёт сюда обновления
-    app.router.add_get("/", lambda request: web.Response(text="Бот работает!"))
+    app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
 
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    print(f"Web server запущен на порту {port}")
+    print(f"🌐 Web server запущен на порту {port}")
+    return runner  # нужно, чтобы потом корректно закрыть
 
 
 # === Установка webhook перед запуском ===
 async def setup_webhook():
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook/{TOKEN}")
-    print(f"Webhook установлен на {WEBHOOK_URL}/webhook/{TOKEN}")
+    print(f"✅ Webhook установлен на {WEBHOOK_URL}/webhook/{TOKEN}")
 
 
-# === Запуск веб-сервера и webhook ===
+# === Главный цикл ===
 async def main():
     await setup_webhook()
-    await run_webserver()
+    runner = await run_webserver()
+
+    # Чтобы Render не "убивал" процесс — держим его живым
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except (KeyboardInterrupt, SystemExit):
+        print("🛑 Остановка бота...")
+    finally:
+        await bot.session.close()
+        await runner.cleanup()
+        print("✅ Сессия и сервер закрыты.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
