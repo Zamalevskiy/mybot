@@ -4,6 +4,7 @@ from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiohttp import web
 
 # === Токен твоего бота ===
 from utils.config import TOKEN
@@ -85,9 +86,26 @@ dp.include_router(chapter_19.router)
 dp.include_router(chapter_20.router)
 
 
-# === Запуск бота ===
+# === HTTP сервер для Render (порт 10000) ===
+async def handle_root(request):
+    return web.Response(text="Бот работает!")
+
+async def run_webserver():
+    app = web.Application()
+    app.router.add_get("/", handle_root)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 10000)  # Render требует открытый порт
+    await site.start()
+    print("Web server запущен на порту 10000")
+
+
+# === Запуск бота и веб-сервера одновременно ===
 async def main():
     print("Бот запущен...")
+    # Запускаем веб-сервер
+    asyncio.create_task(run_webserver())
+    # Запускаем polling
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
