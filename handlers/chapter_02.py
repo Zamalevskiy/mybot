@@ -6,7 +6,11 @@ from aiogram.types import FSInputFile
 router = Router()
 
 # Полный путь к фото
-PHOTO_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "images", "me.jpg")
+import os
+
+photo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "images", "me.JPG")
+await message.answer_photo(photo_path)
+
 
 
 @router.callback_query(F.data == "chapter_02")
