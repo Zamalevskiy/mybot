@@ -5,14 +5,8 @@ from aiogram.types import FSInputFile
 
 router = Router()
 
-import os
-
-photo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "images", "me.JPG")
-
-# Открываем файл и отправляем
-with open(photo_path, "rb") as photo:
-    await message.answer_photo(photo)
-
+# Полный путь к фото
+PHOTO_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "images", "me.JPG")
 
 
 @router.callback_query(F.data == "chapter_02")
@@ -20,12 +14,13 @@ async def chapter_02_handler(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.button(
         text="Вернуться и получить помощь",
-        callback_data="chapter_01"  # теперь корректно ведёт на обработчик chapter_01
+        callback_data="chapter_01"  # ведёт на обработчик chapter_01
     )
     builder.adjust(1)
 
     text = (
-        "<b>Привет! Я - Алексей Замалевский, и я знаю, каково это - когда в жизни бардак и всё валится из рук…</b>\n\n"
+        "<b>Привет! \n"
+        "Я - Алексей Замалевский, и я знаю, каково это - когда в жизни бардак и всё валится из рук…</b>\n\n"
         "Я коуч, психолог и уже 5 лет занимаюсь кризисным консультированием. "
         "За это время помог сотням людей справиться с тревогой, усталостью и ощущением, что жизни больше нет.\n\n"
         "Но если честно, у меня самого было не легче. "
