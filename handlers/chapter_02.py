@@ -5,11 +5,13 @@ from aiogram.types import FSInputFile
 
 router = Router()
 
-# Полный путь к фото
 import os
 
 photo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "images", "me.JPG")
-await message.answer_photo(photo_path)
+
+# Открываем файл и отправляем
+with open(photo_path, "rb") as photo:
+    await message.answer_photo(photo)
 
 
 
