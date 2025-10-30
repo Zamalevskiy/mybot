@@ -67,9 +67,11 @@ for r in routers:
 
 # === Webhook обработчик ===
 async def handle_webhook(request):
-    update = await request.json()
+    data = await request.json()
+    update = types.Update.model_validate(data)
     await dp.feed_update(bot, update)
     return web.Response(status=200)
+
 
 
 # === HTTP сервер для Render ===
