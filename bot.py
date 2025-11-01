@@ -7,6 +7,9 @@ from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 import os
 
+from utils.analytics import log_event, init_db
+init_db()
+
 # === Токен бота ===
 from utils.config import TOKEN
 
