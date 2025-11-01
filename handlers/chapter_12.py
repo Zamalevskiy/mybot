@@ -53,7 +53,7 @@ async def chapter_12_handler(callback: types.CallbackQuery):
         builder = InlineKeyboardBuilder()
         builder.button(text="ЮКасса", url=pay_url)  # кнопка сразу ведёт на Юкассу
         builder.button(text="💳 Перевод на карту / СБП", callback_data="chapter_18")
-        builder.button(text="Я оплатила 👍\ Написать мне", callback_data="chapter_16")  # новая кнопка
+        builder.button(text="Я оплатила \ Написать мне", callback_data="chapter_16")  # новая кнопка
         builder.adjust(1)
 
         await callback.message.answer(text, reply_markup=builder.as_markup())
