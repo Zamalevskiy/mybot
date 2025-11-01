@@ -10,6 +10,10 @@ import os
 # === Токен бота ===
 from utils.config import TOKEN
 
+# === Подключаем аналитику ===
+from utils.analytics import log_event, init_db
+init_db()  # убедимся, что база и таблица созданы
+
 # === Определяем режим запуска ===
 MODE = os.getenv("MODE", "LOCAL")  # Возможные значения: LOCAL или RENDER
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL Render-сервиса (только для RENDER)
@@ -58,6 +62,40 @@ routers = [
 ]
 for r in routers:
     dp.include_router(r)
+
+
+# === Логирование сообщений ===
+@dp.message()
+async def log_all_messages(message: types.Message):
+    log_event(
+        user_id=message.from_user.id,
+        username=getattr(message.from_user, "username", None),
+        first_name=getattr(message.from_user, "first_name", None),
+        last_name=getattr(message.from_user, "last_name", None),
+        event_type="message",
+        event_name="message_text",
+        payload=message.text or "",
+        chapter=None,
+        meta={"message_id": message.message_id}
+    )
+
+
+# === Логирование нажатий кнопок ===
+@dp.callback_query()
+async def log_all_callbacks(callback: types.CallbackQuery):
+    cd = callback.data or ""
+    chapter = cd if cd.startswith("chapter_") else None
+    log_event(
+        user_id=callback.from_user.id,
+        username=getattr(callback.from_user, "username", None),
+        first_name=getattr(callback.from_user, "first_name", None),
+        last_name=getattr(callback.from_user, "last_name", None),
+        event_type="callback",
+        event_name=cd,
+        payload=cd,
+        chapter=chapter,
+        meta={"message_id": callback.message.message_id if callback.message else None}
+    )
 
 
 # === Webhook обработчик ===
@@ -123,8 +161,6 @@ else:
     app = web.Application()
     app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)
     app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
-
-
 
 
 if __name__ == "__main__":
