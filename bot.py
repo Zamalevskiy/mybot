@@ -50,6 +50,45 @@ from handlers import (
 )
 from chapters.chapter_17 import send_reminder
 
+# В bot.py после создания dp
+
+from utils.analytics import log_event
+
+@dp.message()
+async def _log_all_messages(message: types.Message):
+    # логируем текстовые сообщения (или любую активность)
+    log_event(
+        user_id=message.from_user.id,
+        username=getattr(message.from_user, "username", None),
+        first_name=getattr(message.from_user, "first_name", None),
+        last_name=getattr(message.from_user, "last_name", None),
+        event_type="message",
+        event_name="message_text",
+        payload=message.text or "",
+        chapter=None,
+        meta={"message_id": message.message_id}
+    )
+
+@dp.callback_query()
+async def _log_all_callbacks(callback: types.CallbackQuery):
+    # логируем нажатия кнопок
+    # попытаемся извлечь chapter из callback.data (если в формате chapter_XX)
+    cd = callback.data or ""
+    chapter = None
+    if cd.startswith("chapter_"):
+        chapter = cd
+    log_event(
+        user_id=callback.from_user.id,
+        username=getattr(callback.from_user, "username", None),
+        first_name=getattr(callback.from_user, "first_name", None),
+        last_name=getattr(callback.from_user, "last_name", None),
+        event_type="callback",
+        event_name=cd,
+        payload=cd,
+        chapter=chapter,
+        meta={"message_id": callback.message.message_id if callback.message else None}
+    )
+
 # === Роутеры ===
 routers = [
     chapter_01.router, chapter_02.router, chapter_03.router, chapter_04.router,
