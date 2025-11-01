@@ -7,8 +7,9 @@ from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 import os
 
-# === Подключаем аналитику ===
-from utils.analytics import log_event, init_db
+# === Подключаем аналитику через очередь ===
+from utils.analytics_queue import enqueue_event, start_worker
+from utils.analytics import init_db
 init_db()  # убедимся, что база и таблица созданы
 
 # === Токен бота ===
@@ -61,10 +62,10 @@ routers = [
 for r in routers:
     dp.include_router(r)
 
-# === Логирование всех сообщений ===
+# === Логирование сообщений через очередь ===
 @dp.message()
 async def log_all_messages(message: types.Message):
-    log_event(
+    enqueue_event(
         user_id=message.from_user.id,
         username=getattr(message.from_user, "username", None),
         first_name=getattr(message.from_user, "first_name", None),
@@ -76,22 +77,22 @@ async def log_all_messages(message: types.Message):
         meta={"message_id": message.message_id}
     )
 
-# === Логирование нажатий кнопок ===
-#@dp.callback_query()
-#async def log_all_callbacks(callback: types.CallbackQuery):
-#    cd = callback.data or ""
-#    chapter = cd if cd.startswith("chapter_") else None
-#    log_event(
-#       user_id=callback.from_user.id,
-#        username=getattr(callback.from_user, "username", None),
-#        first_name=getattr(callback.from_user, "first_name", None),
-#        last_name=getattr(callback.from_user, "last_name", None),
-#        event_type="callback",
-#        event_name=cd,
-#        payload=cd,
-#        chapter=chapter,
-#        meta={"message_id": callback.message.message_id if callback.message else None}
-#   )
+# === Логирование нажатий кнопок через очередь ===
+@dp.callback_query()
+async def log_all_callbacks(callback: types.CallbackQuery):
+    cd = callback.data or ""
+    chapter = cd if cd.startswith("chapter_") else None
+    enqueue_event(
+        user_id=callback.from_user.id,
+        username=getattr(callback.from_user, "username", None),
+        first_name=getattr(callback.from_user, "first_name", None),
+        last_name=getattr(callback.from_user, "last_name", None),
+        event_type="callback",
+        event_name=cd,
+        payload=cd,
+        chapter=chapter,
+        meta={"message_id": callback.message.message_id if callback.message else None}
+    )
 
 # === Webhook обработчик ===
 async def handle_webhook(request):
@@ -122,6 +123,9 @@ async def setup_webhook():
 
 # === Главная функция ===
 async def main():
+    # запускаем воркер очереди для аналитики
+    await start_worker()
+
     if MODE == "LOCAL":
         print("🚀 Запуск бота в режиме LOCAL (polling)...")
         await bot.delete_webhook(drop_pending_updates=True)
