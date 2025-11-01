@@ -1,1 +1,1 @@
-web: uvicorn bot:app --host 0.0.0.0 --port $PORT
+web: bash -c "while true; do python bot.py; sleep 5; done"
