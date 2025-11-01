@@ -7,15 +7,12 @@ from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 import os
 
-from utils.analytics import log_event, init_db
-init_db()
-
-# === Токен бота ===
-from utils.config import TOKEN
-
 # === Подключаем аналитику ===
 from utils.analytics import log_event, init_db
 init_db()  # убедимся, что база и таблица созданы
+
+# === Токен бота ===
+from utils.config import TOKEN
 
 # === Определяем режим запуска ===
 MODE = os.getenv("MODE", "LOCAL")  # Возможные значения: LOCAL или RENDER
@@ -24,7 +21,6 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL Render-сервиса (тольк�
 # === Инициализация бота и диспетчера ===
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-
 
 # === Обработчик команды /start ===
 @dp.message(Command("start"))
@@ -44,7 +40,6 @@ async def start_handler(message: types.Message):
         "<b>Выбери, что тебе ближе сейчас?</b>"
     )
     await message.answer(text, reply_markup=builder.as_markup())
-
 
 # === Подключение разделов ===
 from handlers import (
@@ -66,8 +61,7 @@ routers = [
 for r in routers:
     dp.include_router(r)
 
-
-# === Логирование сообщений ===
+# === Логирование всех сообщений ===
 @dp.message()
 async def log_all_messages(message: types.Message):
     log_event(
@@ -81,7 +75,6 @@ async def log_all_messages(message: types.Message):
         chapter=None,
         meta={"message_id": message.message_id}
     )
-
 
 # === Логирование нажатий кнопок ===
 @dp.callback_query()
@@ -100,14 +93,12 @@ async def log_all_callbacks(callback: types.CallbackQuery):
         meta={"message_id": callback.message.message_id if callback.message else None}
     )
 
-
 # === Webhook обработчик ===
 async def handle_webhook(request):
     data = await request.json()
     update = types.Update.model_validate(data)
     await dp.feed_update(bot, update)
     return web.Response(status=200)
-
 
 # === HTTP сервер для Render ===
 async def run_webserver():
@@ -123,13 +114,11 @@ async def run_webserver():
     print(f"🌐 Web server запущен на порту {port}")
     return runner
 
-
 # === Установка webhook ===
 async def setup_webhook():
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook/{TOKEN}")
     print(f"✅ Webhook установлен на {WEBHOOK_URL}/webhook/{TOKEN}")
-
 
 # === Главная функция ===
 async def main():
@@ -151,20 +140,16 @@ async def main():
             await runner.cleanup()
             print("✅ Сессия и сервер закрыты.")
 
-
 # === Для локального запуска через asyncio ===
 if MODE == "LOCAL":
     if __name__ == "__main__":
         asyncio.run(main())
 # === Для Render ===
 else:
-    # Render будет запускать uvicorn:
-    # командой типа:
-    # uvicorn bot:app --host 0.0.0.0 --port $PORT
     app = web.Application()
     app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)
     app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
 
-
 if __name__ == "__main__":
     asyncio.run(main())
+
