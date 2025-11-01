@@ -1,19 +1,15 @@
 from aiogram import Router, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import LabeledPrice, PreCheckoutQuery
-from aiogram.filters import Command
+import os
+import requests
 
 router = Router()
-
-# 🔹 Тестовый токен, выданный @BotFather при подключении ЮKassa
-PROVIDER_TOKEN = "381764678:TEST:148623"  # использовать токен, выданный ботфазером, не ключ из кабинета Юкассы
 
 # 🔹 Данные о товаре
 TITLE = "Консультация"
 DESCRIPTION = "Кризисная консультация (2 часа)."
-CURRENCY = "RUB"
 PRICE = 12000  # в рублях
-PAYLOAD = "consultation_payment"
+
 
 # 🔹 Основной экран раздела 12
 @router.callback_query(F.data == "chapter_12")
@@ -33,40 +29,47 @@ async def chapter_12_handler(callback: types.CallbackQuery):
     await callback.answer()
 
 
-# 🔹 Кнопка Юкассы — отправка счёта на оплату
+# 🔹 Обработка кнопки Юкассы — создание ссылки на оплату
 @router.callback_query(F.data == "yookassa_pay")
 async def yookassa_pay(callback: types.CallbackQuery):
-    prices = [LabeledPrice(label=TITLE, amount=PRICE * 100)]  # сумма в копейках
+    SHOP_ID = os.getenv("YOOKASSA_SHOP_ID")
+    SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
 
-    await callback.message.answer_invoice(
-        title=TITLE,
-        description=DESCRIPTION,
-        provider_token=PROVIDER_TOKEN,
-        currency=CURRENCY,
-        prices=prices,
-        payload=PAYLOAD,
-        start_parameter="consultation",
+    # Создание платежа через API Юкассы
+    payment_data = {
+        "amount": {"value": f"{PRICE:.2f}", "currency": "RUB"},
+        "capture": True,
+        "confirmation": {
+            "type": "redirect",
+            # После оплаты пользователь вернётся в бот
+            "return_url": f"https://t.me/{callback.from_user.username or 'your_bot_name'}"
+        },
+        "description": DESCRIPTION,
+        # Передаём user_id, чтобы webhook потом мог найти нужного пользователя
+        "metadata": {"user_id": callback.from_user.id}
+    }
+
+    response = requests.post(
+        "https://api.yookassa.ru/v3/payments",
+        auth=(SHOP_ID, SECRET_KEY),
+        json=payment_data
     )
+
+    if response.status_code == 200:
+        data = response.json()
+        pay_url = data["confirmation"]["confirmation_url"]
+
+        await callback.message.answer(
+            f"💳 <b>Оплата консультации — 12 000 ₽</b>\n\n"
+            f"Перейди по ссылке для оплаты:\n\n"
+            f"<a href='{pay_url}'>Оплатить через ЮКассу</a>\n\n"
+            f"После успешной оплаты ты автоматически перейдёшь к подтверждению.",
+            parse_mode="HTML"
+        )
+    else:
+        await callback.message.answer(
+            f"⚠️ Ошибка при создании платежа:\n\n<code>{response.text}</code>",
+            parse_mode="HTML"
+        )
+
     await callback.answer()
-
-
-# 🔹 Обработка pre_checkout_query (обязательный шаг)
-@router.pre_checkout_query()
-async def process_pre_checkout_query(pre_checkout_query: PreCheckoutQuery, bot):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-
-
-# 🔹 Обработка успешной оплаты
-@router.message(F.successful_payment)
-async def successful_payment_handler(message: types.Message):
-    payment_info = message.successful_payment.to_python()
-    print("✅ Успешная оплата:", payment_info)
-
-    await message.answer(
-        "<b>✅ Оплата прошла успешно!</b>\n\n"
-        "Спасибо! Я свяжусь с тобой в ближайшее время для уточнения деталей встречи 🙌"
-    )
-
-    # 🔹 Переход в раздел 16
-    from chapters.chapter_16 import send_chapter_16
-    await send_chapter_16(message)

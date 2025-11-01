@@ -6,20 +6,33 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 import os
+from fastapi import FastAPI, Request  # 🔹 импорт FastAPI для Юкассы
 
-# === Токен твоего бота ===
+# === Токен бота ===
 from utils.config import TOKEN
 
-# === URL твоего Render сервиса ===
-# Например: https://mybot-945b.onrender.com
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+# === Определяем режим запуска ===
+MODE = os.getenv("MODE", "LOCAL")  # Возможные значения: LOCAL или RENDER
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL Render-сервиса (только для RENDER)
 
 # === Инициализация бота и диспетчера ===
-bot = Bot(
-    token=TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-)
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
+
+# 🔹 FastAPI для Юкассы
+fastapi_app = FastAPI()
+
+@fastapi_app.post("/yookassa-webhook")
+async def yookassa_webhook(request: Request):
+    data = await request.json()
+
+    if data.get("event") == "payment.succeeded":
+        user_id = data["object"]["metadata"]["user_id"]
+        # отправляем пользователю сообщение и переводим в раздел 16
+        from chapters.chapter_16 import send_chapter_16
+        await send_chapter_16(await bot.send_message(user_id, "✅ Оплата получена!"))
+
+    return {"status": "ok"}
 
 
 # === Обработчик команды /start ===
@@ -39,7 +52,6 @@ async def start_handler(message: types.Message):
         "что делать прямо сейчас, чтобы стало легче.\n\n"
         "<b>Выбери, что тебе ближе сейчас?</b>"
     )
-
     await message.answer(text, reply_markup=builder.as_markup())
 
 
@@ -52,7 +64,7 @@ from handlers import (
 )
 from chapters.chapter_17 import send_reminder
 
-# === Подключение роутеров ===
+# === Роутеры ===
 routers = [
     chapter_01.router, chapter_02.router, chapter_03.router, chapter_04.router,
     chapter_05.router, chapter_06.router, chapter_07.router, chapter_08.router,
@@ -60,12 +72,11 @@ routers = [
     chapter_13.router, chapter_14.router, chapter_15.router, chapter_16.router,
     chapter_18.router, chapter_19.router, chapter_20.router
 ]
-
 for r in routers:
     dp.include_router(r)
 
 
-# === Webhook обработчик ===
+# === Webhook обработчик для Telegram ===
 async def handle_webhook(request):
     data = await request.json()
     update = types.Update.model_validate(data)
@@ -73,11 +84,10 @@ async def handle_webhook(request):
     return web.Response(status=200)
 
 
-
 # === HTTP сервер для Render ===
 async def run_webserver():
     app = web.Application()
-    app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)  # Telegram шлёт сюда обновления
+    app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)
     app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
 
     runner = web.AppRunner(app)
@@ -86,31 +96,35 @@ async def run_webserver():
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
     print(f"🌐 Web server запущен на порту {port}")
-    return runner  # нужно, чтобы потом корректно закрыть
+    return runner
 
 
-# === Установка webhook перед запуском ===
+# === Установка webhook для Telegram ===
 async def setup_webhook():
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook/{TOKEN}")
     print(f"✅ Webhook установлен на {WEBHOOK_URL}/webhook/{TOKEN}")
 
 
-# === Главный цикл ===
+# === Главная функция ===
 async def main():
-    await setup_webhook()
-    runner = await run_webserver()
-
-    # Чтобы Render не "убивал" процесс — держим его живым
-    try:
-        while True:
-            await asyncio.sleep(3600)
-    except (KeyboardInterrupt, SystemExit):
-        print("🛑 Остановка бота...")
-    finally:
-        await bot.session.close()
-        await runner.cleanup()
-        print("✅ Сессия и сервер закрыты.")
+    if MODE == "LOCAL":
+        print("🚀 Запуск бота в режиме LOCAL (polling)...")
+        await bot.delete_webhook(drop_pending_updates=True)
+        await dp.start_polling(bot)
+    else:
+        print("🌐 Запуск бота в режиме RENDER (webhook)...")
+        await setup_webhook()
+        runner = await run_webserver()
+        try:
+            while True:
+                await asyncio.sleep(3600)
+        except (KeyboardInterrupt, SystemExit):
+            print("🛑 Остановка бота...")
+        finally:
+            await bot.session.close()
+            await runner.cleanup()
+            print("✅ Сессия и сервер закрыты.")
 
 
 if __name__ == "__main__":
