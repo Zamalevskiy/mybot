@@ -1,16 +1,11 @@
 import asyncio
-import os
-
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
-
-# === Аналитика (и инициализация БД аналитики) ===
-from utils.analytics import init_db, log_event
-init_db()
+import os
 
 # === Токен бота ===
 from utils.config import TOKEN
@@ -44,53 +39,7 @@ async def start_handler(message: types.Message):
     await message.answer(text, reply_markup=builder.as_markup())
 
 
-# === Логгеры аналитики (должны быть подключены ДО роутеров, чтобы ловить всё) ===
-@dp.message()
-async def _log_all_messages(message: types.Message):
-    try:
-        log_event(
-            user_id=message.from_user.id,
-            username=getattr(message.from_user, "username", None),
-            first_name=getattr(message.from_user, "first_name", None),
-            last_name=getattr(message.from_user, "last_name", None),
-            event_type="message",
-            event_name="message_text",
-            payload=message.text or "",
-            chapter=None,
-            meta={"message_id": message.message_id}
-        )
-    except Exception as e:
-        # защищаемся от ошибок логирования, чтобы не ломать бот
-        print("Analytics log error (message):", e)
-
-
-@dp.callback_query()
-async def _log_all_callbacks(callback: types.CallbackQuery):
-    try:
-        cd = callback.data or ""
-        chapter = cd if cd.startswith("chapter_") else None
-        log_event(
-            user_id=callback.from_user.id,
-            username=getattr(callback.from_user, "username", None),
-            first_name=getattr(callback.from_user, "first_name", None),
-            last_name=getattr(callback.from_user, "last_name", None),
-            event_type="callback",
-            event_name=cd,
-            payload=cd,
-            chapter=chapter,
-            meta={"message_id": callback.message.message_id if callback.message else None}
-        )
-    except Exception as e:
-        print("Analytics log error (callback):", e)
-    finally:
-        # обязательно отвечаем на callback, чтобы Telegram не "повесил" кнопку
-        try:
-            await callback.answer()
-        except Exception:
-            pass
-
-
-# === Подключение разделов (роутеров) ===
+# === Подключение разделов ===
 from handlers import (
     chapter_01, chapter_02, chapter_03, chapter_04, chapter_05, chapter_06,
     chapter_07, chapter_08, chapter_09, chapter_10, chapter_11, chapter_12,
@@ -99,6 +48,7 @@ from handlers import (
 )
 from chapters.chapter_17 import send_reminder
 
+# === Роутеры ===
 routers = [
     chapter_01.router, chapter_02.router, chapter_03.router, chapter_04.router,
     chapter_05.router, chapter_06.router, chapter_07.router, chapter_08.router,
@@ -110,14 +60,11 @@ for r in routers:
     dp.include_router(r)
 
 
-# === Webhook обработчик для Telegram (aiohttp) ===
+# === Webhook обработчик ===
 async def handle_webhook(request):
-    try:
-        data = await request.json()
-        update = types.Update.model_validate(data)
-        await dp.feed_update(bot, update)
-    except Exception as e:
-        print("Error in handle_webhook:", e)
+    data = await request.json()
+    update = types.Update.model_validate(data)
+    await dp.feed_update(bot, update)
     return web.Response(status=200)
 
 
@@ -138,8 +85,6 @@ async def run_webserver():
 
 # === Установка webhook ===
 async def setup_webhook():
-    if not WEBHOOK_URL:
-        raise RuntimeError("WEBHOOK_URL не указан в окружении, нельзя настроить webhook.")
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook/{TOKEN}")
     print(f"✅ Webhook установлен на {WEBHOOK_URL}/webhook/{TOKEN}")
@@ -166,9 +111,19 @@ async def main():
             print("✅ Сессия и сервер закрыты.")
 
 
-# === Запуск ===
-if __name__ == "__main__":
-    asyncio.run(main())
+# === Для локального запуска через asyncio ===
+if MODE == "LOCAL":
+    if __name__ == "__main__":
+        asyncio.run(main())
+# === Для Render ===
+else:
+    # Render будет запускать uvicorn:
+    # командой типа:
+    # uvicorn bot:app --host 0.0.0.0 --port $PORT
+    app = web.Application()
+    app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)
+    app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
+
 
 
 
