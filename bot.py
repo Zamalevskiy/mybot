@@ -6,7 +6,6 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 import os
-from fastapi import FastAPI, Request  # 🔹 импорт FastAPI для Юкассы
 
 # === Токен бота ===
 from utils.config import TOKEN
@@ -18,21 +17,6 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL Render-сервиса (тольк�
 # === Инициализация бота и диспетчера ===
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-
-# 🔹 FastAPI для Юкассы
-fastapi_app = FastAPI()
-
-@fastapi_app.post("/yookassa-webhook")
-async def yookassa_webhook(request: Request):
-    data = await request.json()
-
-    if data.get("event") == "payment.succeeded":
-        user_id = data["object"]["metadata"]["user_id"]
-        # отправляем пользователю сообщение и переводим в раздел 16
-        from chapters.chapter_16 import send_chapter_16
-        await send_chapter_16(await bot.send_message(user_id, "✅ Оплата получена!"))
-
-    return {"status": "ok"}
 
 
 # === Обработчик команды /start ===
@@ -76,7 +60,7 @@ for r in routers:
     dp.include_router(r)
 
 
-# === Webhook обработчик для Telegram ===
+# === Webhook обработчик ===
 async def handle_webhook(request):
     data = await request.json()
     update = types.Update.model_validate(data)
@@ -99,7 +83,7 @@ async def run_webserver():
     return runner
 
 
-# === Установка webhook для Telegram ===
+# === Установка webhook ===
 async def setup_webhook():
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook/{TOKEN}")
@@ -125,6 +109,22 @@ async def main():
             await bot.session.close()
             await runner.cleanup()
             print("✅ Сессия и сервер закрыты.")
+
+
+# === Для локального запуска через asyncio ===
+if MODE == "LOCAL":
+    if __name__ == "__main__":
+        asyncio.run(main())
+# === Для Render ===
+else:
+    # Render будет запускать uvicorn:
+    # командой типа:
+    # uvicorn bot:app --host 0.0.0.0 --port $PORT
+    app = web.Application()
+    app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)
+    app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
+
+
 
 
 if __name__ == "__main__":
