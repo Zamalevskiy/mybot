@@ -77,12 +77,12 @@ async def log_all_messages(message: types.Message):
         meta={"message_id": message.message_id}
     )
 
-# === Логирование нажатий кнопок через очередь ===
+# === Логирование нажатий кнопок ===
 @dp.callback_query()
 async def log_all_callbacks(callback: types.CallbackQuery):
     cd = callback.data or ""
     chapter = cd if cd.startswith("chapter_") else None
-    enqueue_event(
+    log_event(
         user_id=callback.from_user.id,
         username=getattr(callback.from_user, "username", None),
         first_name=getattr(callback.from_user, "first_name", None),
@@ -93,6 +93,8 @@ async def log_all_callbacks(callback: types.CallbackQuery):
         chapter=chapter,
         meta={"message_id": callback.message.message_id if callback.message else None}
     )
+    # Обязательный ответ боту, чтобы кнопка работала
+    await callback.answer()
 
 # === Webhook обработчик ===
 async def handle_webhook(request):
