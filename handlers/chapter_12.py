@@ -2,6 +2,7 @@ from aiogram import Router, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import os
 import requests
+import uuid  # 🔹 для уникального Idempotence-Key
 
 router = Router()
 
@@ -35,7 +36,10 @@ async def yookassa_pay(callback: types.CallbackQuery):
     SHOP_ID = os.getenv("YOOKASSA_SHOP_ID")
     SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
 
-    # Создание платежа через API Юкассы
+    # 🔹 Генерация уникального ключа Idempotence
+    idempotence_key = str(uuid.uuid4())
+
+    # 🔹 Данные платежа
     payment_data = {
         "amount": {"value": f"{PRICE:.2f}", "currency": "RUB"},
         "capture": True,
@@ -45,14 +49,20 @@ async def yookassa_pay(callback: types.CallbackQuery):
             "return_url": f"https://t.me/{callback.from_user.username or 'your_bot_name'}"
         },
         "description": DESCRIPTION,
-        # Передаём user_id, чтобы webhook потом мог найти нужного пользователя
         "metadata": {"user_id": callback.from_user.id}
     }
 
+    # 🔹 Заголовки с уникальным Idempotence-Key
+    headers = {
+        "Idempotence-Key": idempotence_key
+    }
+
+    # 🔹 Отправка запроса к Юкассе
     response = requests.post(
         "https://api.yookassa.ru/v3/payments",
         auth=(SHOP_ID, SECRET_KEY),
-        json=payment_data
+        json=payment_data,
+        headers=headers
     )
 
     if response.status_code == 200:
@@ -73,3 +83,4 @@ async def yookassa_pay(callback: types.CallbackQuery):
         )
 
     await callback.answer()
+
