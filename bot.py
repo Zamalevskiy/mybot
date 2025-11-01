@@ -6,6 +6,8 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiohttp import web
 import os
+from utils.analytics import init_db
+init_db()
 
 # === Токен бота ===
 from utils.config import TOKEN
