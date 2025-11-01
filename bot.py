@@ -77,21 +77,21 @@ async def log_all_messages(message: types.Message):
     )
 
 # === Логирование нажатий кнопок ===
-@dp.callback_query()
-async def log_all_callbacks(callback: types.CallbackQuery):
-    cd = callback.data or ""
-    chapter = cd if cd.startswith("chapter_") else None
-    log_event(
-        user_id=callback.from_user.id,
-        username=getattr(callback.from_user, "username", None),
-        first_name=getattr(callback.from_user, "first_name", None),
-        last_name=getattr(callback.from_user, "last_name", None),
-        event_type="callback",
-        event_name=cd,
-        payload=cd,
-        chapter=chapter,
-        meta={"message_id": callback.message.message_id if callback.message else None}
-    )
+#@dp.callback_query()
+#async def log_all_callbacks(callback: types.CallbackQuery):
+#    cd = callback.data or ""
+#    chapter = cd if cd.startswith("chapter_") else None
+#    log_event(
+#       user_id=callback.from_user.id,
+#        username=getattr(callback.from_user, "username", None),
+#        first_name=getattr(callback.from_user, "first_name", None),
+#        last_name=getattr(callback.from_user, "last_name", None),
+#        event_type="callback",
+#        event_name=cd,
+#        payload=cd,
+#        chapter=chapter,
+#        meta={"message_id": callback.message.message_id if callback.message else None}
+#   )
 
 # === Webhook обработчик ===
 async def handle_webhook(request):
