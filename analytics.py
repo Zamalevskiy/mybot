@@ -8,7 +8,7 @@ def connect_to_sheet():
              "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_name("celestial-baton-477016-k2-a0724e20f278.json", scope)
     client = gspread.authorize(creds)
-    sheet = client.open("ИмяТвоейТаблицы").sheet1  # замените на название таблицы
+    sheet = client.open("Bot-analitic").sheet1  # замените на название таблицы
     return sheet
 
 # Функция логирования события
