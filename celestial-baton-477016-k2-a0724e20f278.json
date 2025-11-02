@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "celestial-baton-477016-k2",
+  "private_key_id": "a0724e20f278886a6adc420a7403a2df4801d1db",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCv+MOQwC7f1Jwf\njlZsNz/43wsKcnzsTeAc0KMuDV4wZR/TWHVYWgfchZe4XfYB41CkEsHCg9raV95x\nuO2Y3g9JjCfo7MJRmPROJU2vH24F2s7bStU4ka2OMBkvyPq0l0+W9RMshoLJVHON\nClc9cvTXVb5AXYDv1imEthG8cNrjB0Y64F9wNpTh1F3CQxtVjTRun+Z7bBVop+fz\njcxJU2x6tndrqUbmJhNZlQmRzHF/SiyhueYnxyES1mpmvoOrcvohicE4Jz0JLxiM\nLrWntj2nQH9Tb0YwT+O1sHF6CNBnbqrlSZomeepRrE2wNLkcOMVBvoQr9kI80ju0\nBIsnuHyLAgMBAAECggEAOPdvWAzfH9bUM+MAV0gLjaWnDVrC1jzfsHRaXy40r7YM\n935Lfq6mnN0ioKzKVxIfqP3pe+7zinunp2kWgcZhbI3S3bTHs2KwtBufanHiTELp\ndFRlckq2xLENdkq53nydZ2EvM9rXvBV60s3mMB5m5M79KBkdBIdwKWZHl5lxQs0u\nVytY/rLdTlzRvl8d/0P/r3zzCZZwKkoVJmdWhSZx+jrr4nQCOr1xkPNZE5pOi3fn\nAs6LewkvwXaWcKpTPzrvfB/nRN+IegeewYt1x7NmnEcf4dbgij0Azs+n1T2tH+J+\nC65kuYGneAWikJqOMj5kl1kgReBwz6IxIAIvR5ilAQKBgQDiqs2iyR8+XrSyHhD9\nTSpcww8zJh8B7Ixa2ri/oiJqWPh88eCuyfuumRHrpBNZ9SnUT2O9/dQJp1X7QPUd\nm5X36iXzHwseFeJjwmJ5LLmXez1Vjm87hbzLORQ2cBUIZsCodho75n9UA89+7aOa\nqVGpuMKXn/pmgvlxuesewfTH/wKBgQDGvnv0Ih8bzn0ccpGIn1Yc7/Mhr4ootntR\nDITF135XEiQ6N8H5PDfCaAfSjPVNJBylnDZShZj+lFqxFlUg1J2BvrvM4c/kuS/V\nf4nteuBKFdZrTWnPk2/TOmJsyizmJlTXBHb9PNAaDHMTOMFmHQgJ5a5qDI3s6Fan\n+LU7oL7rdQKBgQCuLeSxV+3rZqliSlpx269W8wmmG4AuYVEFrBfWIshhgpcIpHIs\nvsfpxnSP6Fh6gzuui4cxA3HCLVWUKrlxFBMtHEAnUE6hwt1iHYjAZw8DCc/7A+YU\nDlQism0G3CA9gYBAs+i66QglTnxPpFtZSQ2Y54KZM3Ue+zymGOFFlHP+jwKBgCR2\nnldUS1DWua2Wd40RbsMwYvMzOa3ujQF5woJp3wwqj+r+f+AyZCiO3aCLrBXTIk5g\nMrdBO6i5n0oORuAXIi7Dx8D3TSUxtMz+8VdYy/3Ls+NL+LXU3xdqBtTe4w32ymoI\nr6wWlDezQQmtyA3sFaV7NlzOoNtuZTe8McQW4fBhAoGBAMBEhMX4VzotpYiHTAtN\nomd/8H0Olr5qZK/exwc2rbULoAru4Pt8AMxfN1Sf46hZRQKmh5M9Ws4xi9iZoDbw\nKfQgbp2ROaKj6ItiQ2ugEnbpG0XjA0l7LGwnj94aQ+qldmOuuHw9WWETBI06jozS\npSogl/js78vsCdQSn/OC/j2o\n-----END PRIVATE KEY-----\n",
+  "client_email": "mybot102025@celestial-baton-477016-k2.iam.gserviceaccount.com",
+  "client_id": "111775154997537155025",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/mybot102025%40celestial-baton-477016-k2.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
