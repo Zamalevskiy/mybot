@@ -10,14 +10,16 @@ import os
 # === Токен бота ===
 from utils.config import TOKEN
 
+# === Импорт логирования ===
+from analytics import log_event
+
 # === Определяем режим запуска ===
-MODE = os.getenv("MODE", "LOCAL")  # Возможные значения: LOCAL или RENDER
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL Render-сервиса (только для RENDER)
+MODE = os.getenv("MODE", "LOCAL")  # LOCAL или RENDER
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Только для RENDER
 
 # === Инициализация бота и диспетчера ===
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
-
 
 # === Обработчик команды /start ===
 @dp.message(Command("start"))
@@ -37,6 +39,10 @@ async def start_handler(message: types.Message):
         "<b>Выбери, что тебе ближе сейчас?</b>"
     )
     await message.answer(text, reply_markup=builder.as_markup())
+
+    # Логирование нажатия кнопки /start
+    log_event(message.from_user.id, message.from_user.username or "",
+              section_id="START", button_id="start", next_section="R1")
 
 
 # === Подключение разделов ===
@@ -117,14 +123,10 @@ if MODE == "LOCAL":
         asyncio.run(main())
 # === Для Render ===
 else:
-    # Render будет запускать uvicorn:
-    # командой типа:
-    # uvicorn bot:app --host 0.0.0.0 --port $PORT
+    # Render будет запускать uvicorn
     app = web.Application()
     app.router.add_post(f"/webhook/{TOKEN}", handle_webhook)
     app.router.add_get("/", lambda request: web.Response(text="Бот работает! ✅"))
-
-
 
 
 if __name__ == "__main__":
