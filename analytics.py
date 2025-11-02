@@ -15,9 +15,10 @@ def connect_to_sheet():
 
     # Создание Credentials и подключение к gspread
     SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-creds = Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
+    creds = Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
 
     client = gspread.Client(auth=creds)
+    client.login()
 
     # Открываем таблицу по названию
     sheet = client.open("Bot-analitic").sheet1
@@ -28,3 +29,4 @@ def log_event(user_id, username, section_id, button_id, next_section):
     sheet = connect_to_sheet()
     timestamp = datetime.datetime.now().isoformat()
     sheet.append_row([user_id, username, timestamp, section_id, button_id, next_section])
+
