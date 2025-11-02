@@ -14,7 +14,9 @@ def connect_to_sheet():
     credentials_dict = json.loads(json_content)
 
     # Создание Credentials и подключение к gspread
-    creds = Credentials.from_service_account_info(credentials_dict)
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+creds = Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
+
     client = gspread.Client(auth=creds)
 
     # Открываем таблицу по названию
