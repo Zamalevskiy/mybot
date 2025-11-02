@@ -6,7 +6,7 @@ import datetime
 def connect_to_sheet():
     scope = ["https://spreadsheets.google.com/feeds",
              "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name("celestial-baton-477016-k2-a0724e20f278.json", scope)
     client = gspread.authorize(creds)
     sheet = client.open("ИмяТвоейТаблицы").sheet1  # замените на название таблицы
     return sheet
