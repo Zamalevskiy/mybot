@@ -4,3 +4,5 @@ asyncio==3.4.3
 python-dotenv==1.0.1
 fastapi==0.116.1
 requests
+gspread
+oauth2client
