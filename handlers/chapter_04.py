@@ -1,11 +1,21 @@
 from aiogram import Router, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from analytics import log_event
 
 router = Router()
 
 
 @router.callback_query(F.data == "chapter_04")
 async def chapter_04_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="chapter_04",
+        additional_data=""
+    )
+    
     builder = InlineKeyboardBuilder()
     builder.button(
         text="☀️Вернуть радость себе",
