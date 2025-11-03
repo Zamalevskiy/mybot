@@ -71,23 +71,6 @@ for r in routers:
     dp.include_router(r)
 
 
-# === Обработчик callback-запросов (кнопок) ===
-@dp.callback_query()
-async def callback_handler(callback: types.CallbackQuery):
-    # Логирование нажатия inline-кнопки
-    log_event(
-        user_id=callback.from_user.id,
-        username=callback.from_user.username or "",
-        action_type="button_click",
-        action_name=callback.data,
-        additional_data=""
-    )
-    
-    # Важно: подтверждаем callback и передаем управление дальше
-    await callback.answer()
-    # Не обрабатываем здесь логику кнопок, позволяем роутерам сделать это
-
-
 # === Webhook обработчик ===
 async def handle_webhook(request):
     data = await request.json()
