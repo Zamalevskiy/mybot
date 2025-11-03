@@ -61,23 +61,12 @@ async def chapter_15_handler(callback: types.CallbackQuery):
         )
 
         builder = InlineKeyboardBuilder()
-        
-        # Кнопка ЮКасса с URL (возвращаем оригинальное поведение)
-        builder.button(text="ЮКасса", url=pay_url)
-        builder.button(text="💳 Перевод на карту / СБП", callback_data="bank_transfer_15")
-        builder.button(text="Я оплатила - Написать мне", callback_data="chapter_16")
+        builder.button(text="ЮКасса", url=pay_url)  # кнопка сразу ведёт на Юкассу
+        builder.button(text="💳 Перевод на карту / СБП", callback_data="chapter_19")
+        builder.button(text="Я оплатила - Написать мне", callback_data="chapter_16")  # новая кнопка
         builder.adjust(1)
       
         await callback.message.answer(text, reply_markup=builder.as_markup())
-        
-        # Логируем показ платежных методов
-        log_event(
-            user_id=callback.from_user.id,
-            username=callback.from_user.username or "",
-            action_type="payment_methods_shown",
-            action_name="diagnostic_payment_options", 
-            additional_data="5000"
-        )
     else:
         await callback.message.answer(
             f"⚠️ Ошибка при создании платежа:\n\n<code>{response.text}</code>",
@@ -85,20 +74,3 @@ async def chapter_15_handler(callback: types.CallbackQuery):
         )
 
     await callback.answer()
-
-
-# Обработчик для кнопки перевода на карту (диагностика)
-@router.callback_query(F.data == "bank_transfer_15")
-async def bank_transfer_diagnostic_handler(callback: types.CallbackQuery):
-    # Логирование выбора оплаты переводом на карту
-    log_event(
-        user_id=callback.from_user.id,
-        username=callback.from_user.username or "",
-        action_type="payment_method",
-        action_name="bank_transfer_diagnostic",
-        additional_data="5000"
-    )
-    
-    # Перенаправляем в раздел 19 для показа реквизитов
-    from handlers.chapter_19 import chapter_19_handler
-    await chapter_19_handler(callback)
