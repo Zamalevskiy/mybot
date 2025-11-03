@@ -41,8 +41,13 @@ async def start_handler(message: types.Message):
     await message.answer(text, reply_markup=builder.as_markup())
 
     # Логирование нажатия кнопки /start
-    log_event(message.from_user.id, message.from_user.username or "",
-              section_id="START", button_id="start", next_section="R1")
+    log_event(
+        user_id=message.from_user.id,
+        username=message.from_user.username or "",
+        action_type="command",
+        action_name="start",
+        additional_data=""
+    )
 
 
 # === Подключение разделов ===
@@ -64,6 +69,20 @@ routers = [
 ]
 for r in routers:
     dp.include_router(r)
+
+
+# === Обработчик callback-запросов (кнопок) ===
+@dp.callback_query()
+async def callback_handler(callback: types.CallbackQuery):
+    # Логирование нажатия inline-кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name=callback.data,
+        additional_data=""
+    )
+    await callback.answer()
 
 
 # === Webhook обработчик ===
