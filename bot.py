@@ -82,7 +82,10 @@ async def callback_handler(callback: types.CallbackQuery):
         action_name=callback.data,
         additional_data=""
     )
+    
+    # Важно: подтверждаем callback и передаем управление дальше
     await callback.answer()
+    # Не обрабатываем здесь логику кнопок, позволяем роутерам сделать это
 
 
 # === Webhook обработчик ===
