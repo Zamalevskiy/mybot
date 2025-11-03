@@ -27,7 +27,7 @@ async def chapter_16_handler(callback: types.CallbackQuery):
     )
 
     builder = InlineKeyboardBuilder()
-    # Оставляем URL-кнопку как было, но добавляем промежуточный обработчик для логирования
+    # Создаем кнопку, которая сначала логирует, затем открывает URL
     builder.button(text="➡️ Напиши мне", callback_data="contact_me_log")
     builder.adjust(1)
 
@@ -49,18 +49,13 @@ async def contact_me_log_handler(callback: types.CallbackQuery):
         additional_data=""
     )
     
-    # Создаем кнопку с прямой ссылкой как было раньше
+    # Создаем сообщение с inline-кнопкой, которая сразу открывает URL
     builder = InlineKeyboardBuilder()
     builder.button(text="➡️ Напиши мне", url="https://t.me/zamalevskiy")
     builder.adjust(1)
     
-    # Отправляем сообщение с кнопкой (повторяем оригинальное сообщение с кнопкой)
-    text = (
-        "<b>Спасибо за доверие!❤️</b>\n"
-        "Ты сделала важный шаг к поддержке и ясности.\n"
-        "Всё, что нужно, уже сделано — и это правильно.\n"
-        "Осталось только уточнить дату и время встречи."
-    )
+    # Редактируем оригинальное сообщение, заменяя callback-кнопку на URL-кнопку
+    await callback.message.edit_reply_markup(reply_markup=builder.as_markup())
     
-    await callback.message.answer(text, reply_markup=builder.as_markup())
-    await callback.answer()
+    # Отправляем короткое подтверждение
+    await callback.answer("Открываю чат...")
