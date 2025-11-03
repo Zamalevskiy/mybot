@@ -2,6 +2,7 @@ import os
 from aiogram import Router, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import FSInputFile
+from analytics import log_event
 
 router = Router()
 
@@ -11,6 +12,15 @@ PHOTO_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "images", "
 
 @router.callback_query(F.data == "chapter_02")
 async def chapter_02_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="chapter_02",
+        additional_data=""
+    )
+    
     builder = InlineKeyboardBuilder()
     builder.button(
         text="Вернуться и получить помощь",
