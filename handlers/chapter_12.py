@@ -3,6 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import os
 import requests
 import uuid  # для уникального Idempotence-Key
+from analytics import log_event
 
 router = Router()
 
@@ -14,6 +15,15 @@ PRICE = 12000  # в рублях
 # 🔹 Основной экран раздела 12
 @router.callback_query(F.data == "chapter_12")
 async def chapter_12_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="chapter_12",
+        additional_data=""
+    )
+    
     SHOP_ID = os.getenv("YOOKASSA_SHOP_ID")
     SECRET_KEY = os.getenv("YOOKASSA_SECRET_KEY")
 
