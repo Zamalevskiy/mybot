@@ -3,6 +3,7 @@ import asyncio
 from aiogram import Router, types, F
 from aiogram.types import FSInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from analytics import log_event
 
 router = Router()
 
@@ -12,6 +13,15 @@ PDF_PATH = os.path.join(os.path.dirname(__file__), "..", "assets", "pdfs", "kak_
 
 @router.callback_query(F.data == "chapter_08")
 async def chapter_08_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="chapter_08",
+        additional_data=""
+    )
+    
     text = (
         "<b>Пошаговый план, как снова почувствовать жизнь, когда внутри тишина.</b>\n\n"
         "Вот краткое содержание гайда\n"
@@ -43,6 +53,15 @@ async def chapter_08_handler(callback: types.CallbackQuery):
 
 @router.callback_query(F.data == "download_guide_08")
 async def send_pdf(callback: types.CallbackQuery):
+    # Логирование скачивания гайда
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="download",
+        action_name="guide_08",
+        additional_data=""
+    )
+    
     if os.path.exists(PDF_PATH):
         file = FSInputFile(PDF_PATH)
         await callback.message.answer_document(file, caption="Вот твой гайд 💗")
