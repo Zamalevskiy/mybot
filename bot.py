@@ -21,6 +21,25 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Только для RENDER
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
+# === Middleware для логирования callback-запросов ===
+class AnalyticsMiddleware:
+    async def __call__(self, handler, event, data):
+        if isinstance(event, types.CallbackQuery):
+            # Логируем нажатие callback-кнопки
+            log_event(
+                user_id=event.from_user.id,
+                username=event.from_user.username or "",
+                action_type="button_click",
+                action_name=event.data,
+                additional_data=""
+            )
+        
+        # Продолжаем обработку
+        return await handler(event, data)
+
+# Регистрируем middleware
+dp.update.outer_middleware(AnalyticsMiddleware())
+
 # === Обработчик команды /start ===
 @dp.message(Command("start"))
 async def start_handler(message: types.Message):
