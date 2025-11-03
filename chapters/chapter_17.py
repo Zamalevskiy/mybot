@@ -1,12 +1,22 @@
 import asyncio
 from aiogram import Router
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from analytics import log_event
 
 router = Router()
 
 async def send_reminder(chat_id: int, bot):
     # Задержка 3 часа 50 минут = 14000 секунд
     await asyncio.sleep(14000)
+
+    # Логирование отправки напоминания
+    log_event(
+        user_id=chat_id,
+        username="",
+        action_type="reminder",
+        action_name="chapter_17",
+        additional_data="price_reminder"
+    )
 
     # --- Сообщение 1 ---
     text1 = (
