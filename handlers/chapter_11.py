@@ -1,6 +1,7 @@
 import asyncio
 from aiogram import Router, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from analytics import log_event
 
 # Вставки для раздела 17
 from loader import bot  # если у тебя есть общий объект bot
@@ -11,6 +12,15 @@ router = Router()
 
 @router.callback_query(F.data == "chapter_11")
 async def chapter_11_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="chapter_11",
+        additional_data=""
+    )
+    
     text = (
         "<b>Когда не можешь думать, но надо что-то решать</b>\n"
         "- за 2 часа мы соберём тебя обратно.\n\n"
@@ -27,27 +37,4 @@ async def chapter_11_handler(callback: types.CallbackQuery):
     )
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="🪷 Оплатить и записаться", callback_data="chapter_12")
-    builder.button(text="🎥 Как проходит Консультация?", callback_data="chapter_13")
-    builder.adjust(1)
-
-    await callback.message.answer(text, reply_markup=builder.as_markup())
-
-    # Запуск таймера раздела 17
-    if not user_reached_chapter_16(callback.from_user.id):
-        asyncio.create_task(chapter_17.send_reminder(callback.from_user.id, bot))
-
-    await asyncio.sleep(8)
-
-    text_after = (
-        "Если чувствуешь, что пока не готова к двум часам - ничего страшного 💛\n"
-        "Можно начать с малого - <b>Диагностики ключевой проблемы</b>.\n"
-        "Всего 1 час, и часто именно она становится тем самым “вот оно!”."
-    )
-
-    builder2 = InlineKeyboardBuilder()
-    builder2.button(text="💫 Перейти к диагностике", callback_data="chapter_14")
-    builder2.adjust(1)
-
-    await callback.message.answer(text_after, reply_markup=builder2.as_markup())
-    await callback.answer()
+    builder.button(text="🪷 Оплатить и записаться", callback_data
