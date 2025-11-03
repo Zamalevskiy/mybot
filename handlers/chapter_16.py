@@ -34,7 +34,35 @@ async def chapter_16_handler(callback: types.CallbackQuery):
     )
 
     await callback.message.answer(text, reply_markup=builder.as_markup())
+    
+    # Логируем показ кнопки "Напиши мне"
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="contact_button_shown",
+        action_name="write_to_me",
+        additional_data=""
+    )
+
     await callback.answer()
 
     # Отмечаем, что пользователь достиг раздела 16
     mark_user_reached_chapter_16(callback.from_user.id)
+
+
+# Обработчик для логирования нажатия URL-кнопки (через промежуточный callback)
+@router.callback_query(F.data == "contact_me")
+async def contact_me_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки "Напиши мне"
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="contact_me",
+        additional_data=""
+    )
+    
+    # Перенаправляем на ссылку
+    await callback.answer("Переходим в Telegram...", show_alert=False)
+    # Открываем ссылку
+    await callback.message.answer("Нажмите на ссылку: https://t.me/zamalevskiy")
