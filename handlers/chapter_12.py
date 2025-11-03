@@ -1,3 +1,12 @@
+from aiogram import Router, types, F
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+import os
+import requests
+import uuid
+from analytics import log_event
+
+router = Router()
+
 @router.callback_query(F.data == "chapter_12")
 async def chapter_12_handler(callback: types.CallbackQuery):
     # Логирование нажатия кнопки
@@ -108,3 +117,19 @@ async def yookassa_click_12_handler(callback: types.CallbackQuery):
         await callback.message.answer("❌ Ошибка при создании платежа")
     
     await callback.answer()
+
+
+@router.callback_query(F.data == "bank_transfer_12")
+async def bank_transfer_handler(callback: types.CallbackQuery):
+    # Логирование выбора оплаты переводом на карту
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click", 
+        action_name="bank_transfer_consultation",
+        additional_data="12000"
+    )
+    
+    # Перенаправляем в раздел 18 для показа реквизитов
+    from handlers.chapter_18 import chapter_18_handler
+    await chapter_18_handler(callback)
