@@ -49,8 +49,9 @@ async def log_and_open_contact_handler(callback: types.CallbackQuery):
         additional_data=""
     )
     
-    # Отправляем всплывающее окно со ссылкой (как в Юкассе)
-    await callback.answer(
-        "Нажми на ссылку, чтобы написать мне: https://t.me/zamalevskiy",
-        show_alert=True
+    # Отправляем сообщение с активной ссылкой
+    await callback.message.answer(
+        "Нажми на ссылку, чтобы написать мне:\n"
+        "👉 <a href='https://t.me/zamalevskiy'>@zamalevskiy</a> 👈"
     )
+    await callback.answer()
