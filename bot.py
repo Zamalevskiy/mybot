@@ -75,8 +75,9 @@ from handlers import (
     chapter_07, chapter_08, chapter_09, chapter_10, chapter_11, chapter_12,
     chapter_13, chapter_14, chapter_15, chapter_16, chapter_18, chapter_19,
     chapter_20
-from handlers.contact_handler import router as contact_router
 )
+# Импорт contact_handler отдельно, так как он не в пакете handlers
+from handlers.contact_handler import router as contact_router
 from chapters.chapter_17 import send_reminder
 
 # === Роутеры ===
@@ -85,8 +86,8 @@ routers = [
     chapter_05.router, chapter_06.router, chapter_07.router, chapter_08.router,
     chapter_09.router, chapter_10.router, chapter_11.router, chapter_12.router,
     chapter_13.router, chapter_14.router, chapter_15.router, chapter_16.router,
-    chapter_18.router, chapter_19.router, chapter_20.router
-    contact_router
+    chapter_18.router, chapter_19.router, chapter_20.router,
+    contact_router  # добавляем contact_router
 ]
 for r in routers:
     dp.include_router(r)
