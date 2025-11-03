@@ -1,5 +1,6 @@
 from aiogram import Router, types, F
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from analytics import log_event
 
 # Вставка для проверки раздела 16 и запуска напоминания
 from loader import bot
@@ -11,6 +12,15 @@ router = Router()
 
 @router.callback_query(F.data == "chapter_14")
 async def chapter_14_handler(callback: types.CallbackQuery):
+    # Логирование нажатия кнопки
+    log_event(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username or "",
+        action_type="button_click",
+        action_name="chapter_14",
+        additional_data=""
+    )
+    
     text = (
         "<b>Диагностика текущей ключевой проблемы.</b>\n\n"
         "Если не понимаешь, с чего начать - начни с диагностики.\n"
