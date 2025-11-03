@@ -6,7 +6,6 @@ from analytics import log_event
 # Импортируем функцию для отметки пользователя
 from utils.chapter16 import mark_user_reached_chapter_16, user_reached_chapter_16
 
-
 router = Router()
 
 @router.callback_query(F.data == "chapter_16")
@@ -28,31 +27,19 @@ async def chapter_16_handler(callback: types.CallbackQuery):
     )
 
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text="➡️ Напиши мне",
-        url="https://t.me/zamalevskiy"
-    )
+    # Оставляем URL-кнопку как было, но добавляем промежуточный обработчик для логирования
+    builder.button(text="➡️ Напиши мне", callback_data="contact_me_log")
+    builder.adjust(1)
 
     await callback.message.answer(text, reply_markup=builder.as_markup())
-    
-    # Логируем показ кнопки "Напиши мне"
-    log_event(
-        user_id=callback.from_user.id,
-        username=callback.from_user.username or "",
-        action_type="contact_button_shown",
-        action_name="write_to_me",
-        additional_data=""
-    )
-
     await callback.answer()
 
     # Отмечаем, что пользователь достиг раздела 16
     mark_user_reached_chapter_16(callback.from_user.id)
 
 
-# Обработчик для логирования нажатия URL-кнопки (через промежуточный callback)
-@router.callback_query(F.data == "contact_me")
-async def contact_me_handler(callback: types.CallbackQuery):
+@router.callback_query(F.data == "contact_me_log")
+async def contact_me_log_handler(callback: types.CallbackQuery):
     # Логирование нажатия кнопки "Напиши мне"
     log_event(
         user_id=callback.from_user.id,
@@ -62,7 +49,18 @@ async def contact_me_handler(callback: types.CallbackQuery):
         additional_data=""
     )
     
-    # Перенаправляем на ссылку
-    await callback.answer("Переходим в Telegram...", show_alert=False)
-    # Открываем ссылку
-    await callback.message.answer("Нажмите на ссылку: https://t.me/zamalevskiy")
+    # Создаем кнопку с прямой ссылкой как было раньше
+    builder = InlineKeyboardBuilder()
+    builder.button(text="➡️ Напиши мне", url="https://t.me/zamalevskiy")
+    builder.adjust(1)
+    
+    # Отправляем сообщение с кнопкой (повторяем оригинальное сообщение с кнопкой)
+    text = (
+        "<b>Спасибо за доверие!❤️</b>\n"
+        "Ты сделала важный шаг к поддержке и ясности.\n"
+        "Всё, что нужно, уже сделано — и это правильно.\n"
+        "Осталось только уточнить дату и время встречи."
+    )
+    
+    await callback.message.answer(text, reply_markup=builder.as_markup())
+    await callback.answer()
