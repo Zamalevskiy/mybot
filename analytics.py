@@ -3,39 +3,134 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
+import logging
 
-# Кэш для подключения, чтобы не создавать соединение каждый раз
-_sheet_cache = None
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-def connect_to_sheet():
-    global _sheet_cache
-    if _sheet_cache:
-        return _sheet_cache
+# ID вашей Google таблицы (из URL)
+SPREADSHEET_ID = "10j2-3Ud4YsFtVSyFs3cr2w_dWwtfWm5czzJ7zf8JsP4"  # Замените на ваш ID
+SHEET_NAME = "Данные аналитики"  # Название листа
 
-    # Получаем JSON из переменной окружения
-    json_content = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
-    if not json_content:
-        raise ValueError("Переменная окружения GOOGLE_SERVICE_ACCOUNT_JSON не найдена")
+# Получение учетных данных из переменной окружения
+def get_google_credentials():
+    try:
+        service_account_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
+        if not service_account_json:
+            logger.error("❌ GOOGLE_SERVICE_ACCOUNT_JSON не найден в переменных окружения")
+            return None
+        
+        # Парсим JSON из строки
+        creds_dict = json.loads(service_account_json)
+        
+        # Создаем учетные данные
+        scope = ['https://www.googleapis.com/auth/spreadsheets']
+        creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+        return creds
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка при получении учетных данных: {e}")
+        return None
 
-    credentials_dict = json.loads(json_content)
+# Инициализация клиента Google Sheets
+def get_sheets_client():
+    try:
+        creds = get_google_credentials()
+        if not creds:
+            return None
+            
+        client = gspread.authorize(creds)
+        logger.info("✅ Успешная авторизация в Google Sheets")
+        return client
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка при инициализации клиента Google Sheets: {e}")
+        return None
 
-    # Полные scopes для работы с Google Sheets и Drive
-    SCOPES = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
+# Создание или получение листа
+def get_or_create_sheet(client):
+    try:
+        # Открываем таблицу
+        spreadsheet = client.open_by_key(SPREADSHEET_ID)
+        
+        # Пытаемся открыть лист
+        try:
+            worksheet = spreadsheet.worksheet(SHEET_NAME)
+            logger.info(f"✅ Лист '{SHEET_NAME}' найден")
+        except gspread.exceptions.WorksheetNotFound:
+            # Создаем новый лист
+            worksheet = spreadsheet.add_worksheet(title=SHEET_NAME, rows=1000, cols=10)
+            
+            # Добавляем заголовки
+            headers = [
+                "Timestamp", 
+                "User ID", 
+                "Username", 
+                "Action Type", 
+                "Action Name", 
+                "Additional Data"
+            ]
+            worksheet.append_row(headers)
+            logger.info(f"✅ Создан новый лист '{SHEET_NAME}' с заголовками")
+        
+        return worksheet
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка при работе с листом: {e}")
+        return None
 
-    creds = Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
-    client = gspread.authorize(creds)
+# Функция логирования событий
+def log_event(user_id, username, action_type, action_name, additional_data=""):
+    try:
+        # Получаем клиента Google Sheets
+        client = get_sheets_client()
+        if not client:
+            logger.error("❌ Не удалось инициализировать клиент Google Sheets")
+            return False
+        
+        # Получаем или создаем лист
+        worksheet = get_or_create_sheet(client)
+        if not worksheet:
+            logger.error("❌ Не удалось получить доступ к листу")
+            return False
+        
+        # Подготавливаем данные для записи
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        row_data = [
+            timestamp,
+            str(user_id),
+            str(username),
+            str(action_type),
+            str(action_name),
+            str(additional_data)
+        ]
+        
+        # Добавляем строку в таблицу
+        worksheet.append_row(row_data)
+        logger.info(f"✅ Данные записаны в таблицу: {action_type} - {action_name}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка при записи в Google Sheets: {e}")
+        return False
 
-    # Открываем нужный Google Sheet
-    sheet = client.open("Bot-analitic").sheet1
+# Тестовая функция для проверки подключения
+def test_connection():
+    """Функция для тестирования подключения к Google Sheets"""
+    try:
+        client = get_sheets_client()
+        if client:
+            worksheet = get_or_create_sheet(client)
+            if worksheet:
+                print("✅ Подключение к Google Sheets успешно настроено!")
+                return True
+        print("❌ Ошибка подключения к Google Sheets")
+        return False
+    except Exception as e:
+        print(f"❌ Ошибка при тестировании подключения: {e}")
+        return False
 
-    # Сохраняем в кэш
-    _sheet_cache = sheet
-    return sheet
-
-def log_event(user_id, username, section_id, button_id, next_section):
-    sheet = connect_to_sheet()
-    timestamp = datetime.now().isoformat()
-    sheet.append_row([user_id, username, timestamp, section_id, button_id, next_section])
+if __name__ == "__main__":
+    # Тест при запуске файла
+    test_connection()
